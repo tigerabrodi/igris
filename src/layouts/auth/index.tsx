@@ -4,7 +4,14 @@ import { ROUTES } from '@/lib/constants'
 import { useAuthActions } from '@convex-dev/auth/react'
 import { api } from '@convex/_generated/api'
 import { useConvexAuth, useQuery } from 'convex/react'
-import { ListIcon, Loader2Icon, LogOutIcon, PlusIcon } from 'lucide-react'
+import {
+  AlertTriangleIcon,
+  CheckIcon,
+  ListIcon,
+  Loader2Icon,
+  LogOutIcon,
+  PlusIcon,
+} from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, Outlet, useNavigate } from 'react-router'
 
@@ -33,11 +40,13 @@ export function AuthLayout() {
     )
   }
 
+  const hasUserApiKey = Boolean(user?.api)
+
   return (
     <div className="flex w-full flex-1">
       {/* Sidebar */}
       <div className="bg-background flex w-64 flex-col gap-4 border-r p-6">
-        <span className="font-medium">Igris</span>
+        <span className="mx-auto mb-6 text-lg font-bold">Igris</span>
 
         <nav className="flex flex-col gap-2">
           <Button
@@ -64,10 +73,15 @@ export function AuthLayout() {
 
         <Button
           variant="ghost"
-          className="w-full justify-start px-2 text-sm font-medium"
+          className="flex w-full items-center justify-between px-2 text-sm font-medium"
           onClick={() => setIsApiKeyDialogOpen(true)}
         >
           Set API key
+          {hasUserApiKey ? (
+            <CheckIcon className="size-4 text-green-500" />
+          ) : (
+            <AlertTriangleIcon className="size-4 text-red-500" />
+          )}
         </Button>
 
         <div className="mt-auto">
