@@ -1,5 +1,7 @@
+import { Button } from '@/components/ui/button'
+
 function App() {
-  return <div>hello world</div>
+  return <Button>hello world</Button>
 }
 
 export default App
