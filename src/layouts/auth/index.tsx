@@ -9,8 +9,8 @@ import { useEffect, useState } from 'react'
 import { Link, Outlet, useNavigate } from 'react-router'
 
 export function AuthLayout() {
-  const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false)
-  const [isCreateSetDialogOpen, setIsCreateSetDialogOpen] = useState(false)
+  const [, setIsApiKeyDialogOpen] = useState(false)
+  const [, setIsCreateSetDialogOpen] = useState(false)
 
   const user = useQuery(api.users.getCurrentUser)
   const state = useConvexAuth()
