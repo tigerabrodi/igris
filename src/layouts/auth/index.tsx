@@ -14,9 +14,10 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, Outlet, useNavigate } from 'react-router'
+import { ApiKeyDialog } from './components/api-key-dialog'
 
 export function AuthLayout() {
-  const [, setIsApiKeyDialogOpen] = useState(false)
+  const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false)
   const [, setIsCreateSetDialogOpen] = useState(false)
 
   const user = useQuery(api.users.getCurrentUser)
@@ -101,11 +102,14 @@ export function AuthLayout() {
         <Outlet />
       </main>
 
-      {/* <ApiKeyDialog
-        open={isApiKeyDialogOpen}
-        onOpenChange={setIsApiKeyDialogOpen}
-      />
-      <CreateSetDialog
+      {isApiKeyDialogOpen && (
+        <ApiKeyDialog
+          open={isApiKeyDialogOpen}
+          onOpenChange={setIsApiKeyDialogOpen}
+        />
+      )}
+
+      {/* <CreateSetDialog
         open={isCreateSetDialogOpen}
         onOpenChange={setIsCreateSetDialogOpen}
       /> */}
