@@ -15,6 +15,7 @@ import { ROUTES } from '@/lib/constants'
 import { handlePromise } from '@/lib/utils'
 import { api } from '@convex/_generated/api'
 import { useMutation } from 'convex/react'
+import { ConvexError } from 'convex/values'
 import { generatePath, useNavigate } from 'react-router'
 
 const CREATE_SET_FORM_NAME = 'create-set'
@@ -46,9 +47,16 @@ export function CreateSetDialog({ open, onOpenChange }: CreateSetDialogProps) {
     async (_, formData) => {
       const title = formData.get(CREATE_SET_FORM_NAME) as string
 
-      const [newSetId, error] = await handlePromise(createSet({ name: title }))
+      const [result, error] = await handlePromise(createSet({ name: title }))
 
-      if (error) {
+      if (error || !result) {
+        if (error instanceof ConvexError) {
+          return {
+            status: 'error',
+            error: error.message,
+          }
+        }
+
         return {
           status: 'error',
           error: 'Failed to save API key. Please try again.',
@@ -56,7 +64,7 @@ export function CreateSetDialog({ open, onOpenChange }: CreateSetDialogProps) {
       }
 
       onOpenChange(false)
-      void navigate(generatePath(ROUTES.voiceSet, { voiceSetId: newSetId }))
+      void navigate(generatePath(ROUTES.voiceSet, { voiceSetId: result.setId }))
 
       return {
         status: 'success',
