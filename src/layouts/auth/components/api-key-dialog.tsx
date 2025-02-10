@@ -55,6 +55,9 @@ export function ApiKeyDialog({ open, onOpenChange }: ApiKeyDialogProps) {
         }
       }
 
+      toast.success('API key saved successfully')
+      onOpenChange(false)
+
       return {
         status: 'success',
       }
@@ -75,17 +78,10 @@ export function ApiKeyDialog({ open, onOpenChange }: ApiKeyDialogProps) {
     }
   }, [open, getApiKey])
 
-  useEffect(() => {
-    if (state.status === 'success') {
-      toast.success('API key saved successfully')
-      onOpenChange(false)
-    }
-  }, [state.status, onOpenChange])
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <form action={formAction}>
+        <form action={formAction} className="flex flex-col gap-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <KeyRound className="h-5 w-5" />
@@ -96,21 +92,19 @@ export function ApiKeyDialog({ open, onOpenChange }: ApiKeyDialogProps) {
               or use your key for anything other than generating voices.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="flex flex-col gap-3">
-              <Label htmlFor={API_KEY_FORM_NAME}>API Key</Label>
-              <InputWithFeedback
-                value={apiKey}
-                onChange={(event) => setApiKey(event.target.value)}
-                name={API_KEY_FORM_NAME}
-                id={API_KEY_FORM_NAME}
-                type="password"
-                placeholder="Enter your ElevenLabs API key"
-                errorMessage={state.status === 'error' ? state.error : ''}
-                isError={state.status === 'error' && !!state.error}
-                required
-              />
-            </div>
+          <div className="flex flex-col gap-3">
+            <Label htmlFor={API_KEY_FORM_NAME}>API Key</Label>
+            <InputWithFeedback
+              value={apiKey}
+              onChange={(event) => setApiKey(event.target.value)}
+              name={API_KEY_FORM_NAME}
+              id={API_KEY_FORM_NAME}
+              type="password"
+              placeholder="Enter your ElevenLabs API key"
+              errorMessage={state.status === 'error' ? state.error : ''}
+              isError={state.status === 'error' && !!state.error}
+              required
+            />
           </div>
           <DialogFooter>
             <Button
