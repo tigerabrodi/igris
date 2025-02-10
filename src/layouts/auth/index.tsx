@@ -7,15 +7,14 @@ import { useConvexAuth, useQuery } from 'convex/react'
 import {
   AlertTriangleIcon,
   CheckIcon,
-  ListIcon,
   Loader2Icon,
   LogOutIcon,
-  PlusIcon,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Link, Outlet, useNavigate } from 'react-router'
+import { Outlet, useNavigate } from 'react-router'
 import { ApiKeyDialog } from './components/api-key-dialog'
 import { CreateSetDialog } from './components/create-set-dialog'
+import { Sidebar } from './components/sidebar'
 
 export function AuthLayout() {
   const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false)
@@ -50,27 +49,7 @@ export function AuthLayout() {
       <div className="bg-background flex w-64 flex-col gap-4 border-r p-6">
         <span className="mx-auto mb-6 text-lg font-bold">Igris</span>
 
-        <nav className="flex flex-col gap-2">
-          <Button
-            variant="ghost"
-            className="w-full justify-start px-2 text-sm font-medium"
-            asChild
-          >
-            <Link to="/voice-sets" className="flex items-center gap-2">
-              <ListIcon className="size-4" />
-              Voice Sets
-            </Link>
-          </Button>
-          <Button
-            variant="ghost"
-            className="flex w-full items-center justify-start gap-2 px-2 text-sm font-medium"
-            onClick={() => setIsCreateSetDialogOpen(true)}
-          >
-            <PlusIcon className="size-4" />
-            Create new set
-          </Button>
-        </nav>
-
+        <Sidebar onOpenCreateSetDialog={() => setIsCreateSetDialogOpen(true)} />
         <Separator />
 
         <Button
