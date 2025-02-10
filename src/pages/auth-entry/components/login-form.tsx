@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { handlePromise } from '@/lib/utils'
 import { useAuthActions } from '@convex-dev/auth/react'
-import { useActionState, useEffect } from 'react'
+import { useActionState } from 'react'
 import { toast } from 'sonner'
 
 const SIGN_IN_STEP = 'signIn'
@@ -35,16 +35,11 @@ export function LoginForm() {
         return { status: 'error', errors }
       }
 
+      toast.success('Login successful')
       return { status: 'success' }
     },
     { status: 'error', errors: { email: '' } }
   )
-
-  useEffect(() => {
-    if (state.status === 'success') {
-      toast.success('Login successful')
-    }
-  }, [state.status])
 
   return (
     <form className="flex flex-col gap-9" action={formAction}>
