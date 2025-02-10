@@ -1,8 +1,9 @@
 import { getAuthUserId } from '@convex-dev/auth/server'
-import { v } from 'convex/values'
+import { ConvexError, v } from 'convex/values'
 import { api } from './_generated/api'
 import { Doc } from './_generated/dataModel'
 import { ActionCtx, mutation, query, QueryCtx } from './_generated/server'
+import { handlePromise } from './lib'
 
 /**
  * This function is used to get the current user.
@@ -12,8 +13,9 @@ export async function requireCurrentUser(
   ctx: QueryCtx | ActionCtx
 ): Promise<Doc<'users'>> {
   const user = await ctx.runQuery(api.users.getCurrentUser)
+
   if (!user) {
-    throw new Error('User not found')
+    throw new ConvexError('User not found')
   }
 
   return user
@@ -33,10 +35,16 @@ export const getCurrentUser = query({
 export const getUserByEmail = query({
   args: { email: v.string() },
   handler: async (ctx, { email }) => {
-    return await ctx.db
+    const user = await ctx.db
       .query('users')
       .withIndex('by_email', (q) => q.eq('email', email))
       .first()
+
+    if (!user) {
+      throw new ConvexError('User not found')
+    }
+
+    return user
   },
 })
 
@@ -53,6 +61,10 @@ export const updateUser = mutation({
     }),
   },
   handler: async (ctx, { userId, data }) => {
-    return await ctx.db.patch(userId, data)
+    const [, error] = await handlePromise(ctx.db.patch(userId, data))
+
+    if (error) {
+      throw new ConvexError('Failed to update user')
+    }
   },
 })
