@@ -41,6 +41,11 @@ export function ApiKeyDialog({ open, onOpenChange }: ApiKeyDialogProps) {
   const storeApiKey = useAction(api.key.storeApiKey)
 
   const [apiKey, setApiKey] = useState('')
+  const [fetchExistingKeyStatus, setFetchExistingKeyStatus] = useState<
+    'idle' | 'loading' | 'error' | 'success'
+  >('idle')
+  const [fetchExistingKeyErrorMessage, setFetchExistingKeyErrorMessage] =
+    useState('')
 
   const [state, formAction, isPending] = useActionState<FormState, FormData>(
     async (_, formData) => {
@@ -68,15 +73,28 @@ export function ApiKeyDialog({ open, onOpenChange }: ApiKeyDialogProps) {
   useEffect(() => {
     if (open) {
       // Fetch API key when dialog opens
+      setFetchExistingKeyStatus('loading')
       getApiKey()
         .then((key) => {
           if (key) setApiKey(key)
+          setFetchExistingKeyStatus('success')
         })
-        .catch((error) => {
-          console.error('Error fetching API key', error)
+        .catch(() => {
+          setFetchExistingKeyErrorMessage(
+            'Failed to fetch existing API key. Please try again.'
+          )
+          setFetchExistingKeyStatus('error')
         })
     }
   }, [open, getApiKey])
+
+  const isError = fetchExistingKeyStatus === 'error' || state.status === 'error'
+  const errorMessage =
+    fetchExistingKeyStatus === 'error'
+      ? fetchExistingKeyErrorMessage
+      : state.status === 'error'
+        ? state.error
+        : ''
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -101,8 +119,8 @@ export function ApiKeyDialog({ open, onOpenChange }: ApiKeyDialogProps) {
               id={API_KEY_FORM_NAME}
               type="password"
               placeholder="Enter your ElevenLabs API key"
-              errorMessage={state.status === 'error' ? state.error : ''}
-              isError={state.status === 'error' && !!state.error}
+              errorMessage={errorMessage}
+              isError={isError}
               required
             />
           </div>
