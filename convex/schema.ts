@@ -14,6 +14,31 @@ const schema = defineSchema({
       })
     ),
   }).index('by_email', ['email']),
+
+  voiceSets: defineTable({
+    name: v.string(),
+    selectedVoiceId: v.string(), // Maps to our voice constants
+    updatedAt: v.number(),
+    userId: v.id('users'),
+    totalMessages: v.number(),
+  }).index('by_userId', ['userId']),
+
+  voiceMessages: defineTable({
+    position: v.number(),
+    currentText: v.string(),
+    lastGenerationMetadata: v.optional(
+      v.object({
+        text: v.string(),
+        voiceId: v.string(),
+        audioFileId: v.id('_storage'),
+      })
+    ),
+    updatedAt: v.number(),
+    setId: v.id('voiceSets'),
+    userId: v.id('users'),
+  })
+    .index('by_setId', ['setId'])
+    .index('by_setId_position', ['setId', 'position']),
 })
 
 export default schema

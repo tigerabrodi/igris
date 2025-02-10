@@ -15,10 +15,11 @@ import {
 import { useEffect, useState } from 'react'
 import { Link, Outlet, useNavigate } from 'react-router'
 import { ApiKeyDialog } from './components/api-key-dialog'
+import { CreateSetDialog } from './components/create-set-dialog'
 
 export function AuthLayout() {
   const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false)
-  const [, setIsCreateSetDialogOpen] = useState(false)
+  const [isCreateSetDialogOpen, setIsCreateSetDialogOpen] = useState(false)
 
   const user = useQuery(api.users.getCurrentUser)
   const state = useConvexAuth()
@@ -109,10 +110,12 @@ export function AuthLayout() {
         />
       )}
 
-      {/* <CreateSetDialog
-        open={isCreateSetDialogOpen}
-        onOpenChange={setIsCreateSetDialogOpen}
-      /> */}
+      {isCreateSetDialogOpen && (
+        <CreateSetDialog
+          open={isCreateSetDialogOpen}
+          onOpenChange={setIsCreateSetDialogOpen}
+        />
+      )}
     </div>
   )
 }
