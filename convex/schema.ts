@@ -29,16 +29,14 @@ const schema = defineSchema({
     lastGenerationMetadata: v.optional(
       v.object({
         text: v.string(),
-        voiceId: v.string(),
+        elevenLabsVoiceId: v.string(),
         audioFileId: v.id('_storage'),
       })
     ),
     updatedAt: v.number(),
     setId: v.id('voiceSets'),
     userId: v.id('users'),
-  })
-    .index('by_setId', ['setId'])
-    .index('by_setId_position', ['setId', 'position']),
+  }).index('by_setId', ['setId']),
 })
 
 export default schema
