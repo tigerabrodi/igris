@@ -5,7 +5,7 @@ import { handlePromise } from '@/lib/utils'
 import { useAuthActions } from '@convex-dev/auth/react'
 import { api } from '@convex/_generated/api'
 import { useConvex } from 'convex/react'
-import { useActionState, useEffect } from 'react'
+import { useActionState } from 'react'
 import { toast } from 'sonner'
 
 const SIGN_UP_STEP = 'signUp'
@@ -71,17 +71,11 @@ export function RegisterForm() {
           'Something went wrong during registration. Please try later.'
         return { status: 'error', errors }
       }
-
+      toast.success('Registration successful')
       return { status: 'success' }
     },
     { status: 'error', errors: { email: '', password: '' } }
   )
-
-  useEffect(() => {
-    if (state.status === 'success') {
-      toast.success('Registration successful')
-    }
-  }, [state.status])
 
   return (
     <form action={formAction} className="flex flex-col gap-9">
