@@ -1,5 +1,5 @@
 import { v } from 'convex/values'
-import { mutation } from './_generated/server'
+import { mutation, query } from './_generated/server'
 import { ELEVEN_LABS_VOICES } from './elevenlabs.lib'
 import { requireCurrentUser } from './users'
 
@@ -30,5 +30,19 @@ export const createSet = mutation({
     })
 
     return setId
+  },
+})
+
+export const getAllSets = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await requireCurrentUser(ctx)
+
+    const sets = await ctx.db
+      .query('voiceSets')
+      .withIndex('by_userId', (q) => q.eq('userId', user._id))
+      .collect()
+
+    return sets
   },
 })
