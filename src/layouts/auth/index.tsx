@@ -99,7 +99,7 @@ export function AuthLayout() {
       </div>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto">
+      <main className="flex flex-1 overflow-auto">
         <Outlet />
       </main>
 
