@@ -169,3 +169,23 @@ export const deleteSet = mutation({
     }
   },
 })
+
+export const getSetAudioFiles = query({
+  args: { setId: v.id('voiceSets') },
+  async handler(ctx, args) {
+    const messages = await ctx.db
+      .query('voiceMessages')
+      .filter((q) => q.eq(q.field('setId'), args.setId))
+      .filter((q) => q.neq(q.field('lastGenerationMetadata'), null))
+      .collect()
+
+    return Promise.all(
+      messages.map(async (msg) => ({
+        position: msg.position,
+        audioUrl: await ctx.storage.getUrl(
+          msg.lastGenerationMetadata!.audioFileId
+        ),
+      }))
+    )
+  },
+})

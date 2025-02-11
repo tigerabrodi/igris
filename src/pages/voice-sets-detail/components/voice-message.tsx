@@ -1,13 +1,14 @@
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { cn } from '@/lib/utils'
+import { cn, handlePromise, slugify, Status } from '@/lib/utils'
 import { Doc, Id } from '@convex/_generated/dataModel'
 import { useConvex } from 'convex/react'
 import { Download, Loader2, Play, Trash2, Wand2 } from 'lucide-react'
 import { useCallback, useState } from 'react'
+import { toast } from 'sonner'
 import { useAudioContext } from '../audio-context/context'
 import { useVoiceMessage } from '../hooks/voice-message'
-import { getAudioUrl } from '../lib/utils'
+import { downloadBlob, getAudioUrl } from '../lib/utils'
 
 type VoiceMessageViewProps = {
   message: {
@@ -22,7 +23,8 @@ type VoiceMessageViewProps = {
   onDelete: () => void
   textareaRef: (element: HTMLTextAreaElement | null) => void
   onPrefetch: () => void
-
+  onDownload: () => void
+  isDownloading: boolean
   text: string
 }
 
@@ -36,6 +38,8 @@ function VoiceMessageView({
   text,
   onTextChange,
   onPrefetch,
+  onDownload,
+  isDownloading,
 }: VoiceMessageViewProps) {
   return (
     <div className="flex flex-1 gap-4">
@@ -82,10 +86,15 @@ function VoiceMessageView({
             size="icon"
             variant="outline"
             className="size-9"
-            disabled={!message.hasGeneratedAnyAudio}
+            disabled={!message.hasGeneratedAnyAudio || isDownloading}
             aria-label="Download"
+            onClick={onDownload}
           >
-            <Download className="size-4" />
+            {isDownloading ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Download className="size-4" />
+            )}
           </Button>
         </div>
         <Button
@@ -132,6 +141,48 @@ export function VoiceMessage({
     }
   }, [message._id, messageToView.hasGeneratedAnyAudio, prefetchUrl, convex])
 
+  const [downloadStatus, setDownloadStatus] = useState<Status>('idle')
+
+  const handleDownload = useCallback(async () => {
+    if (!messageToView.hasGeneratedAnyAudio) return
+
+    setDownloadStatus('loading')
+
+    const [url, getUrlError] = await handlePromise(
+      getAudioUrl(message._id, convex)
+    )
+
+    if (getUrlError || !url) {
+      toast.error('Failed to get audio URL')
+      setDownloadStatus('error')
+      return
+    }
+
+    const [blob, downloadError] = await handlePromise(
+      fetch(url).then((res) => res.blob())
+    )
+
+    if (downloadError || !blob) {
+      toast.error('Failed to download audio')
+      setDownloadStatus('error')
+      return
+    }
+
+    // Use the message position for order in filename
+    downloadBlob(
+      blob,
+      `${slugify(message.currentText)}-${message.position}.mp3`
+    )
+
+    setDownloadStatus('success')
+  }, [
+    message._id,
+    message.currentText,
+    message.position,
+    messageToView.hasGeneratedAnyAudio,
+    convex,
+  ])
+
   return (
     <div key={message._id} className="flex items-start gap-4">
       <div className="text-muted-foreground w-8 text-center text-sm">
@@ -140,6 +191,8 @@ export function VoiceMessage({
       <VoiceMessageView
         message={messageToView}
         text={text}
+        isDownloading={downloadStatus === 'loading'}
+        onDownload={() => void handleDownload()}
         isPlaying={state.currentMessageId === message._id}
         onTextChange={(text) => {
           setText(text)

@@ -8,12 +8,14 @@ export function Header({
   onAddMessage,
   onDownloadAll,
   onDeleteSet,
+  isDownloadingAll,
 }: {
   onNameChange: (name: string) => void
   initialName: string
   onAddMessage: () => void
   onDownloadAll: () => void
   onDeleteSet: () => void
+  isDownloadingAll: boolean
 }) {
   return (
     <div className="border-b p-6">
@@ -27,8 +29,12 @@ export function Header({
           <Button size="icon" variant="outline" onClick={onAddMessage}>
             <PlusIcon className="size-4" />
           </Button>
-          <Button variant="outline" onClick={onDownloadAll}>
-            Download all
+          <Button
+            variant="outline"
+            onClick={onDownloadAll}
+            disabled={isDownloadingAll}
+          >
+            {isDownloadingAll ? 'Downloading...' : 'Download all'}
           </Button>
           <Button variant="destructive" onClick={onDeleteSet} className="ml-10">
             Delete set

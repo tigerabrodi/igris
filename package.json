@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test": "vitest"
   },
   "dependencies": {
     "@auth/core": "0.37.0",
@@ -26,6 +27,7 @@
     "clsx": "^2.1.1",
     "convex": "^1.19.0",
     "elevenlabs": "^1.50.5",
+    "jszip": "^3.10.1",
     "lucide-react": "^0.474.0",
     "next-themes": "^0.4.4",
     "react": "^19.0.0",
@@ -53,6 +55,7 @@
     "prettier-plugin-tailwindcss": "^0.6.11",
     "typescript": "~5.6.2",
     "typescript-eslint": "^8.18.2",
-    "vite": "^6.0.5"
+    "vite": "^6.0.5",
+    "vitest": "^3.0.5"
   }
 }

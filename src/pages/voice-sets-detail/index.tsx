@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { ROUTES } from '@/lib/constants'
-import { handlePromise, Status } from '@/lib/utils'
+import { handlePromise, slugify, Status } from '@/lib/utils'
+import { api } from '@convex/_generated/api'
 import { Id } from '@convex/_generated/dataModel'
+import { useConvex } from 'convex/react'
 import { ConvexError } from 'convex/values'
+import JSZip from 'jszip'
 import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { AudioProvider } from './audio-context/provider'
@@ -15,6 +18,7 @@ import { VoiceMessage } from './components/voice-message'
 import { VoiceSelector } from './components/voice-selector'
 import { VoiceSetSkeleton } from './components/voice-set-skeleton'
 import { useVoiceSetDetail } from './hooks/voice-set-detail'
+import { downloadBlob } from './lib/utils'
 
 const DEBOUNCE_CHANGE_TIMEOUT = 200
 
@@ -28,7 +32,8 @@ export function VoiceSetPage() {
 
 function VoiceSetDetail() {
   const { voiceSetId } = useParams<{ voiceSetId: Id<'voiceSets'> }>()
-  console.log('voiceSetId', voiceSetId)
+
+  const convex = useConvex()
 
   const navigate = useNavigate()
   const updateNameTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -58,6 +63,8 @@ function VoiceSetDetail() {
     shouldDelete: false,
     status: 'idle',
   })
+
+  const [downloadAllStatus, setDownloadAllStatus] = useState<Status>('idle')
 
   const messageRefs = useRef<Array<HTMLTextAreaElement | null>>([])
 
@@ -170,8 +177,6 @@ function VoiceSetDetail() {
       return
     }
 
-    console.log('newMessage', newMessage)
-
     const newMessageIndex = newMessage.position - 1
 
     scrollToMessage(newMessageIndex)
@@ -234,6 +239,57 @@ function VoiceSetDetail() {
     }))
   }
 
+  const onDownloadAll = async () => {
+    if (!voiceSet) return
+
+    setDownloadAllStatus('loading')
+
+    const getFilesPromise = convex.query(api.sets.getSetAudioFiles, {
+      setId: voiceSetId!,
+    })
+    const [files, filesError] = await handlePromise(getFilesPromise)
+
+    if (filesError) {
+      setDownloadAllStatus('error')
+      toast.error('Failed to download all files')
+      return
+    }
+
+    if (files.length === 0) {
+      setDownloadAllStatus('success')
+      toast.success('No files to download')
+      return
+    }
+
+    const zip = new JSZip()
+
+    const allDownloadPromises = files.map(async (file) => {
+      if (!file.audioUrl) return
+
+      const response = await fetch(file.audioUrl)
+      const blob = await response.blob()
+      const filename = `${slugify(voiceSet.name)}-${file.position}.mp3`
+      zip.file(filename, blob)
+    })
+
+    const [, downloadError] = await handlePromise(
+      Promise.all(allDownloadPromises)
+    )
+
+    if (downloadError) {
+      setDownloadAllStatus('error')
+      toast.error('Failed to download all files')
+      return
+    }
+
+    const zipBlob = await zip.generateAsync({ type: 'blob' })
+    downloadBlob(zipBlob, `${slugify(voiceSet.name)}.zip`)
+
+    // Should be noticable downloading in the browser
+    // No need to communicate success
+    setDownloadAllStatus('success')
+  }
+
   // loading
   if (voiceSet === undefined) {
     return <VoiceSetSkeleton />
@@ -261,7 +317,8 @@ function VoiceSetDetail() {
         initialName={voiceSet.name}
         onAddMessage={() => void onAddMessage()}
         onDeleteSet={() => void onDeleteSet()}
-        onDownloadAll={() => {}}
+        onDownloadAll={() => void onDownloadAll()}
+        isDownloadingAll={downloadAllStatus === 'loading'}
       />
 
       {/* Content area */}
