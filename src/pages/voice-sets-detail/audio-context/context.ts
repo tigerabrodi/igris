@@ -16,6 +16,10 @@ export const AudioContext = createContext<{
   ) => Promise<void>
   pause: () => void
   seek: (time: number) => void
+  prefetchUrl: (
+    messageId: Id<'voiceMessages'>,
+    getUrl: () => Promise<string | undefined>
+  ) => Promise<void>
 }>({
   state: {
     currentMessageId: null,
@@ -26,6 +30,7 @@ export const AudioContext = createContext<{
   playMessage: async () => {},
   pause: () => {},
   seek: () => {},
+  prefetchUrl: async () => {},
 })
 
 export function useAudioContext() {

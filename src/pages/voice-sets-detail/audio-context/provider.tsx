@@ -67,8 +67,20 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     audioManager.current?.seek(time)
   }, [])
 
+  const prefetchUrl = useCallback(
+    async (
+      messageId: Id<'voiceMessages'>,
+      getUrl: () => Promise<string | undefined>
+    ) => {
+      await audioManager.current?.prefetchUrl(messageId, getUrl)
+    },
+    []
+  )
+
   return (
-    <AudioContext.Provider value={{ state, playMessage, pause, seek }}>
+    <AudioContext.Provider
+      value={{ state, playMessage, pause, seek, prefetchUrl }}
+    >
       {children}
     </AudioContext.Provider>
   )

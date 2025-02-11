@@ -76,6 +76,28 @@ export class AudioManager {
     await this.audioElement.play()
   }
 
+  async prefetchUrl(
+    messageId: string,
+    getUrl: () => Promise<string | undefined>
+  ) {
+    // If already in cache, skip
+    if (this.messageUrlCache.has(messageId)) {
+      return
+    }
+
+    const url = await getUrl()
+    console.log('prefetchUrl', url)
+
+    if (url) {
+      this.messageUrlCache.set(messageId, url)
+
+      // preload the audio
+      const preloadAudio = new Audio()
+      preloadAudio.src = url
+      preloadAudio.load()
+    }
+  }
+
   pause() {
     this.audioElement.pause()
   }
