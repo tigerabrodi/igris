@@ -2,6 +2,7 @@ import { Search } from 'lucide-react'
 import { useState } from 'react'
 
 import { Input } from '@/components/ui/input'
+import { usePrefetchQuery } from '@/hooks/use-prefetch-query'
 import { ROUTES } from '@/lib/constants'
 import { api } from '@convex/_generated/api'
 import { Doc } from '@convex/_generated/dataModel'
@@ -9,6 +10,7 @@ import { useQuery } from 'convex/react'
 import { generatePath, Link } from 'react-router'
 
 const PLACEHOLDER_SETS_LENGTH = 10
+const PRE_FETCH_TIMEOUT_MS = 5000
 
 function PlaceholderSetsList() {
   return (
@@ -23,19 +25,54 @@ function PlaceholderSetsList() {
   )
 }
 
+function VoiceSetItem({ set }: { set: Doc<'voiceSets'> }) {
+  // We don't need a long timeout here for prefetching
+  // We can assume user is fast to click and no need to keep the pre subscription open for tool long
+
+  const prefetchVoiceSet = usePrefetchQuery(
+    api.sets.getSetById,
+    {
+      id: set._id,
+    },
+    {
+      timeoutMs: PRE_FETCH_TIMEOUT_MS,
+    }
+  )
+
+  const prefetchMessages = usePrefetchQuery(
+    api.messages.getAllMessagesBySetId,
+    {
+      setId: set._id,
+    },
+    {
+      timeoutMs: PRE_FETCH_TIMEOUT_MS,
+    }
+  )
+
+  const handlePrefetch = () => {
+    prefetchVoiceSet()
+    prefetchMessages()
+  }
+
+  return (
+    <Link
+      key={set._id}
+      to={generatePath(ROUTES.voiceSet, {
+        voiceSetId: set._id.toString(),
+      })}
+      className="hover:text-primary text-lg"
+      onMouseEnter={handlePrefetch}
+    >
+      {set.name} ({set.totalMessages})
+    </Link>
+  )
+}
+
 function FilteredSetsList({ sets }: { sets: Array<Doc<'voiceSets'>> }) {
   return (
     <div className="flex flex-col gap-2">
       {sets.map((set) => (
-        <Link
-          key={set._id}
-          to={generatePath(ROUTES.voiceSet, {
-            voiceSetId: set._id.toString(),
-          })}
-          className="hover:text-primary text-lg"
-        >
-          {set.name} ({set.totalMessages})
-        </Link>
+        <VoiceSetItem key={set._id} set={set} />
       ))}
     </div>
   )
