@@ -91,10 +91,4 @@ export const ELEVEN_LABS_VOICES = {
   },
 } as const
 
-export const ELEVEN_LABS_MODEL = 'eleven_turbo_v2.5'
-
-export const DEFAULT_VOICE_SETTINGS = {
-  similarity_boost: 1,
-  stability: 1,
-  use_speaker_boost: true,
-} as const
+export const ELEVEN_LABS_MODEL = 'eleven_multilingual_v2'
