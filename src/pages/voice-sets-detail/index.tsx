@@ -65,18 +65,30 @@ function VoiceSetDetail() {
   })
 
   const [downloadAllStatus, setDownloadAllStatus] = useState<Status>('idle')
+  const [newMessageToFocusIndex, setNewMessageToFocusIndex] = useState<
+    number | null
+  >(null)
 
   const messageRefs = useRef<Array<HTMLTextAreaElement | null>>([])
 
+  useEffect(() => {
+    // 1. Focus and scroll to new message
+    // 2. Select text so it's easy to edit
+    if (newMessageToFocusIndex !== null) {
+      scrollToMessage(newMessageToFocusIndex)
+      const newTextarea = messageRefs.current[newMessageToFocusIndex]
+      if (newTextarea) {
+        newTextarea.select()
+      }
+      setNewMessageToFocusIndex(null)
+    }
+  }, [newMessageToFocusIndex])
+
   const scrollToMessage = (index: number) => {
-    console.log('index', index)
     const textarea = messageRefs.current[index]
     if (textarea) {
-      requestAnimationFrame(() => {
-        console.log('scrolling and focusing')
-        textarea.scrollIntoView({ behavior: 'smooth' })
-        textarea.focus()
-      })
+      textarea.scrollIntoView({ behavior: 'smooth' })
+      textarea.focus()
     }
   }
 
@@ -177,9 +189,7 @@ function VoiceSetDetail() {
       return
     }
 
-    const newMessageIndex = newMessage.position - 1
-
-    scrollToMessage(newMessageIndex)
+    setNewMessageToFocusIndex(newMessage.position - 1)
   }
 
   const setTextareaRef = (
