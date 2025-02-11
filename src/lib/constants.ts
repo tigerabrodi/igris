@@ -8,3 +8,5 @@ export const ROUTES = {
   voiceSets: '/voice-sets',
   voiceSet: '/voice-sets/:voiceSetId',
 } as const
+
+export const ERROR_TOAST_DURATION = 7000

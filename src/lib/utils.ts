@@ -15,3 +15,5 @@ export async function handlePromise<PromiseResult>(
     return [null, error instanceof Error ? error : new Error(String(error))]
   }
 }
+
+export type Status = 'idle' | 'loading' | 'success' | 'error'
