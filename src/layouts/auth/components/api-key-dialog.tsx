@@ -96,6 +96,11 @@ export function ApiKeyDialog({ open, onOpenChange }: ApiKeyDialogProps) {
         ? state.error
         : ''
 
+  const isFetchingExistingKey = fetchExistingKeyStatus === 'loading'
+  const placeholder = isFetchingExistingKey
+    ? 'Fetching existing API key...'
+    : 'Enter your ElevenLabs API key'
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -114,12 +119,13 @@ export function ApiKeyDialog({ open, onOpenChange }: ApiKeyDialogProps) {
             <Label htmlFor={API_KEY_FORM_NAME}>API Key</Label>
             <InputWithFeedback
               value={apiKey}
-              disabled={fetchExistingKeyStatus === 'loading'}
+              disabled={isFetchingExistingKey}
               onChange={(event) => setApiKey(event.target.value)}
               name={API_KEY_FORM_NAME}
               id={API_KEY_FORM_NAME}
               type="password"
-              placeholder="Enter your ElevenLabs API key"
+              isLoading={isFetchingExistingKey}
+              placeholder={placeholder}
               errorMessage={errorMessage}
               isError={isError}
               required
