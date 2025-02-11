@@ -11,11 +11,11 @@ import { handlePromise } from './lib'
  */
 export async function requireCurrentUser(
   ctx: QueryCtx | ActionCtx
-): Promise<Doc<'users'>> {
+): Promise<Doc<'users'> | null> {
   const user = await ctx.runQuery(api.users.getCurrentUser)
 
   if (!user) {
-    throw new ConvexError('User not found')
+    return null
   }
 
   return user
