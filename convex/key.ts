@@ -25,6 +25,10 @@ export const storeApiKey = action({
   async handler(ctx, args) {
     const user = await requireCurrentUser(ctx)
 
+    if (!user) {
+      throw new ConvexError('User not found')
+    }
+
     const [key, error] = await handlePromise(getEncryptionKey())
 
     if (error) {
@@ -59,10 +63,10 @@ export const storeApiKey = action({
 
 export const getApiKey = action({
   async handler(ctx) {
-    const [user, getUserError] = await handlePromise(requireCurrentUser(ctx))
+    const user = await requireCurrentUser(ctx)
 
-    if (getUserError) {
-      throw new ConvexError('Failed to get user')
+    if (!user) {
+      return null
     }
 
     if (!user.api) {
