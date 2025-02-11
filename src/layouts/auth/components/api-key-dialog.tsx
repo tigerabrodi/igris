@@ -114,6 +114,7 @@ export function ApiKeyDialog({ open, onOpenChange }: ApiKeyDialogProps) {
             <Label htmlFor={API_KEY_FORM_NAME}>API Key</Label>
             <InputWithFeedback
               value={apiKey}
+              disabled={fetchExistingKeyStatus === 'loading'}
               onChange={(event) => setApiKey(event.target.value)}
               name={API_KEY_FORM_NAME}
               id={API_KEY_FORM_NAME}
