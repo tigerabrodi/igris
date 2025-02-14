@@ -199,3 +199,10 @@ export const getAudioUrl = query({
     return url
   },
 })
+
+export const getMessageById = query({
+  args: { messageId: v.id('voiceMessages') },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.messageId)
+  },
+})
