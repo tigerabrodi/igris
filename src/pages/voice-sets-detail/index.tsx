@@ -8,7 +8,6 @@ import JSZip from 'jszip'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
-import { useAudioContext } from './audio-context/context'
 import { AudioProvider } from './audio-context/provider'
 import { AudioPlayer } from './components/audio-player'
 import { DeleteAlertDialog } from './components/delete-alert-dialog'
@@ -21,7 +20,7 @@ import { VoiceSetSkeleton } from './components/voice-set-skeleton'
 import { useVoiceOperations } from './hooks/voice-operation'
 import { useVoiceSetConvex } from './hooks/voice-set-convex'
 import { useVoiceSetHotkeys } from './hooks/voice-set-hot-keys'
-import { downloadBlob, getAudioUrl } from './lib/utils'
+import { downloadBlob } from './lib/utils'
 import { MessageRef, useVoiceSetContext } from './set-context/context'
 import { VoiceSetProvider } from './set-context/provider'
 
@@ -81,7 +80,6 @@ function VoiceSetDetail() {
   } = useVoiceSetConvex()
 
   const { messagesRefs, focusedMessageRef } = useVoiceSetContext()
-  const { playMessage } = useAudioContext()
 
   const { handleGenerateForFocused, handleDownloadForFocused } =
     useVoiceOperations()
@@ -119,22 +117,13 @@ function VoiceSetDetail() {
 
   useVoiceSetHotkeys({
     onGenerate: async () => {
-      const messageId = await handleGenerateForFocused()
-      if (!messageId) return
-
-      await playMessage({
-        messageId,
-        getUrl: async () => {
-          const url = await getAudioUrl(messageId, convex)
-          return url
-        },
-      })
+      await handleGenerateForFocused()
     },
     onDownload: () => {
-      void handleDownloadForFocused()
+      handleDownloadForFocused()
     },
-    onDownloadAll: () => {
-      void onDownloadAll()
+    onDownloadAll: async () => {
+      await onDownloadAll()
     },
     onNavigateUp: () => {
       handleNavigate('up')
@@ -142,8 +131,8 @@ function VoiceSetDetail() {
     onNavigateDown: () => {
       handleNavigate('down')
     },
-    onCreateMessage: () => {
-      void onAddMessage()
+    onCreateMessage: async () => {
+      await onAddMessage()
     },
   })
 

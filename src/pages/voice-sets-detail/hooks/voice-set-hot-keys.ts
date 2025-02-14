@@ -12,9 +12,9 @@ const HOTKEYS = {
 type UseVoiceSetHotkeysProps = {
   onGenerate: () => Promise<void>
   onDownload: () => void
-  onDownloadAll: () => void
+  onDownloadAll: () => Promise<void>
   onNavigateUp: () => void
-  onCreateMessage: () => void
+  onCreateMessage: () => Promise<void>
   onNavigateDown: () => void
 }
 
@@ -41,7 +41,7 @@ export function useVoiceSetHotkeys({
     HOTKEYS.download,
     (event) => {
       event.preventDefault()
-      onDownload()
+      void onDownload()
     },
     {
       enableOnFormTags: true,
@@ -53,7 +53,7 @@ export function useVoiceSetHotkeys({
     HOTKEYS.downloadAll,
     (event) => {
       event.preventDefault()
-      onDownloadAll()
+      void onDownloadAll()
     },
     { enableOnFormTags: true }
   )
@@ -65,7 +65,7 @@ export function useVoiceSetHotkeys({
     HOTKEYS.navigateUp,
     (event) => {
       event.preventDefault()
-      onNavigateUp()
+      void onNavigateUp()
     },
     {
       enableOnFormTags: true,
@@ -76,7 +76,7 @@ export function useVoiceSetHotkeys({
     HOTKEYS.navigateDown,
     (event) => {
       event.preventDefault()
-      onNavigateDown()
+      void onNavigateDown()
     },
     {
       enableOnFormTags: true,
@@ -87,7 +87,7 @@ export function useVoiceSetHotkeys({
     HOTKEYS.createMessage,
     (event) => {
       event.preventDefault()
-      onCreateMessage()
+      void onCreateMessage()
     },
     {
       enableOnFormTags: true,
