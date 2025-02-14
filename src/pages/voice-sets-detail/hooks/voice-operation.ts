@@ -2,11 +2,12 @@ import { ERROR_TOAST_DURATION } from '@/lib/constants'
 import { handlePromise, slugify, Status } from '@/lib/utils'
 import { api } from '@convex/_generated/api'
 import { Id } from '@convex/_generated/dataModel'
-import { useAction, useConvex } from 'convex/react'
+import { useConvex } from 'convex/react'
 import { atom, useAtom } from 'jotai'
 import { useCallback } from 'react'
 import { useParams } from 'react-router'
 import { toast } from 'sonner'
+import { useAudioContext } from '../audio-context/context'
 import { downloadBlob, getAudioUrl } from '../lib/utils'
 import { useVoiceSetContext } from '../set-context/context'
 
@@ -37,7 +38,7 @@ export const messageOperationAtom = (messageId: Id<'voiceMessages'>) =>
 export function useVoiceOperations() {
   const { voiceSetId } = useParams<{ voiceSetId: Id<'voiceSets'> }>()
   const { focusedMessageRef } = useVoiceSetContext()
-  const generateAndStoreAudio = useAction(api.audio.generateAndStoreAudio)
+  const { playMessage } = useAudioContext()
   const convex = useConvex()
   const [messageOperations, setMessageOperations] = useAtom(
     messageOperationsAtom
@@ -77,7 +78,7 @@ export function useVoiceOperations() {
       handleUpdateMessageOperation(messageId, { generateStatus: 'loading' })
 
       const [, error] = await handlePromise(
-        generateAndStoreAudio({
+        convex.action(api.audio.generateAndStoreAudio, {
           messageId,
           text,
         })
@@ -89,10 +90,27 @@ export function useVoiceOperations() {
         return
       }
 
+      const updatedMessage = await convex.query(api.messages.getMessageById, {
+        messageId,
+      })
+
+      if (!updatedMessage) {
+        toast.error('Could not play message, please try manually')
+        handleUpdateMessageOperation(messageId, { generateStatus: 'error' })
+        return
+      }
+
+      await playMessage({
+        messageId,
+        getUrl: async () => {
+          const url = await getAudioUrl(messageId, convex)
+          return url
+        },
+      })
+
       handleUpdateMessageOperation(messageId, { generateStatus: 'success' })
-      return messageId
     },
-    [generateAndStoreAudio, handleUpdateMessageOperation, messageOperations]
+    [convex, handleUpdateMessageOperation, messageOperations, playMessage]
   )
 
   const handleGenerateForFocused = useCallback(async () => {

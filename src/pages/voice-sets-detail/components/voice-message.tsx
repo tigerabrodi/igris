@@ -54,9 +54,6 @@ export function VoiceMessage({
       messageId: message._id,
       text,
     })
-
-    await handlePlayMessage()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handleGenerate, message._id, text])
 
   const handlePlayMessage = useCallback(async () => {
@@ -102,8 +99,8 @@ export function VoiceMessage({
         isDownloading={messageOperation.downloadStatus === 'loading'}
         onDownload={() => handleDownload(message._id)}
         isPlaying={state.currentMessageId === message._id}
-        onGenerate={() => handleGenerateMessageAudio()}
-        onPlay={() => handlePlayMessage()}
+        onGenerate={handleGenerateMessageAudio}
+        onPlay={handlePlayMessage}
         onDelete={() => handleDeleteMessage(message._id)}
         onPrefetch={handlePrefetch}
         onFocus={handleFocus}

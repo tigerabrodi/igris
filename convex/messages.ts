@@ -1,5 +1,10 @@
 import { ConvexError, v } from 'convex/values'
-import { internalMutation, mutation, query } from './_generated/server'
+import {
+  internalMutation,
+  internalQuery,
+  mutation,
+  query,
+} from './_generated/server'
 import { handlePromise } from './lib'
 import { requireCurrentUser } from './users'
 
@@ -204,5 +209,16 @@ export const getMessageById = query({
   args: { messageId: v.id('voiceMessages') },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.messageId)
+  },
+})
+
+export const getMessageForAudio = internalQuery({
+  args: { messageId: v.id('voiceMessages') },
+  handler: async (ctx, args) => {
+    const message = await ctx.db.get(args.messageId)
+    if (!message) {
+      throw new ConvexError('Message not found')
+    }
+    return message
   },
 })
