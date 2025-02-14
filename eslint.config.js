@@ -38,6 +38,7 @@ export default tseslint.config(
         { allowConstantExport: true },
       ],
       'no-await-in-loop': 'error',
+      '@typescript-eslint/no-misused-promises': 'off',
       '@typescript-eslint/array-type': ['error', { default: 'generic' }],
       '@typescript-eslint/naming-convention': [
         'error',
