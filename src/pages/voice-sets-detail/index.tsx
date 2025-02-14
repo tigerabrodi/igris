@@ -152,8 +152,6 @@ function VoiceSetDetail() {
       const messageRef = messagesRefs.current?.[index]
       if (!messageRef) return
 
-      console.log('focusing', messageRef.textareaElement)
-
       messageRef.textareaElement.focus()
       messageRef.textareaElement.select()
 
@@ -375,8 +373,6 @@ function VoiceSetDetail() {
       setId: voiceSetId!,
     })
     const [files, filesError] = await handlePromise(getFilesPromise)
-
-    console.log('error', filesError)
 
     if (filesError) {
       setDownloadAllStatus('error')
