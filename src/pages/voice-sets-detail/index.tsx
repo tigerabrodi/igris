@@ -14,6 +14,7 @@ import { AudioPlayer } from './components/audio-player'
 import { DeleteAlertDialog } from './components/delete-alert-dialog'
 import { Header } from './components/header'
 import { MiniSidebar } from './components/mini-sidebar'
+import { ShortcutsInfoDialog } from './components/shortcuts-info-dialog'
 import { VoiceMessage } from './components/voice-message'
 import { VoiceSelector } from './components/voice-selector'
 import { VoiceSetSkeleton } from './components/voice-set-skeleton'
@@ -520,6 +521,8 @@ function VoiceSetDetail() {
             set and all its messages."
         />
       )}
+
+      <ShortcutsInfoDialog />
     </div>
   )
 }
