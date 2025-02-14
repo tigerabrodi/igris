@@ -79,10 +79,6 @@ export const getSetById = query({
   handler: async (ctx, args) => {
     const set = await ctx.db.get(args.id)
 
-    if (!set) {
-      throw new ConvexError('Set not found')
-    }
-
     return set
   },
 })
@@ -106,16 +102,16 @@ export const getSetByMessageId = internalQuery({
     id: v.id('voiceMessages'),
   },
   handler: async (ctx, args) => {
-    const [message, getMessageError] = await handlePromise(ctx.db.get(args.id))
+    const message = await ctx.db.get(args.id)
 
-    if (getMessageError || !message) {
-      throw new ConvexError('Message not found')
+    if (!message) {
+      return null
     }
 
-    const [set, getSetError] = await handlePromise(ctx.db.get(message.setId))
+    const set = await ctx.db.get(message.setId)
 
-    if (getSetError || !set) {
-      throw new ConvexError('Set not found')
+    if (!set) {
+      return null
     }
 
     return set

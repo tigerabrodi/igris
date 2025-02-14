@@ -40,10 +40,6 @@ export const getUserByEmail = query({
       .withIndex('by_email', (q) => q.eq('email', email))
       .first()
 
-    if (!user) {
-      throw new ConvexError('User not found')
-    }
-
     return user
   },
 })
