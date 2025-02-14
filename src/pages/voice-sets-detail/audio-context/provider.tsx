@@ -72,7 +72,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       messageId: Id<'voiceMessages'>,
       getUrl: () => Promise<string | undefined>
     ) => {
-      await audioManager.current?.prefetchUrl(messageId, getUrl)
+      await audioManager.current?.prefetchAudioUrl(messageId, getUrl)
     },
     []
   )

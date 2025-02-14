@@ -78,7 +78,7 @@ export class AudioManager {
     await this.audioElement.play()
   }
 
-  async prefetchUrl(
+  async prefetchAudioUrl(
     messageId: string,
     getUrl: () => Promise<string | undefined>
   ) {
@@ -88,7 +88,6 @@ export class AudioManager {
     }
 
     const url = await getUrl()
-    console.log('prefetchUrl', url)
 
     if (url) {
       this.messageUrlCache.set(messageId, url)
