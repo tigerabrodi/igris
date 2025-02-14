@@ -28,6 +28,10 @@ export const generateAndStoreAudio = action({
       id: args.messageId,
     })
 
+    if (!set) {
+      throw new ConvexError('Set not found')
+    }
+
     const [audioBlob, generateAudioError] = await handlePromise(
       generateAudioFromElevenLabs({
         text: args.text,
