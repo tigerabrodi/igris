@@ -3,7 +3,7 @@ import { Doc, Id } from '@convex/_generated/dataModel'
 import { useMutation, useQuery } from 'convex/react'
 import { useParams } from 'react-router'
 
-export function useVoiceSetDetail() {
+export function useVoiceSetConvex() {
   const { voiceSetId } = useParams<{ voiceSetId: Id<'voiceSets'> }>()
 
   const voiceSet = useQuery(api.sets.getSetById, {

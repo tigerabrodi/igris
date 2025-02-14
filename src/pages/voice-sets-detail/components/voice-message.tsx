@@ -1,115 +1,15 @@
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import { cn, handlePromise, slugify, Status } from '@/lib/utils'
 import { Doc, Id } from '@convex/_generated/dataModel'
 import { useConvex } from 'convex/react'
-import { Download, Loader2, Play, Trash2, Wand2 } from 'lucide-react'
-import { useCallback, useState } from 'react'
-import { toast } from 'sonner'
+import { useAtom } from 'jotai'
+import { useCallback, useMemo, useState } from 'react'
 import { useAudioContext } from '../audio-context/context'
-import { useVoiceMessage } from '../hooks/voice-message'
-import { downloadBlob, getAudioUrl } from '../lib/utils'
-
-type VoiceMessageViewProps = {
-  message: {
-    isGenerating: boolean
-    hasGeneratedAnyAudio: boolean
-    isPending: boolean
-  }
-  isPlaying: boolean
-  onTextChange: (text: string) => void
-  onGenerate: () => void
-  onPlay: () => void
-  onDelete: () => void
-  textareaRef: (element: HTMLTextAreaElement | null) => void
-  onPrefetch: () => void
-  onDownload: () => void
-  isDownloading: boolean
-  text: string
-}
-
-function VoiceMessageView({
-  message,
-  isPlaying,
-  onGenerate,
-  onPlay,
-  onDelete,
-  textareaRef,
-  text,
-  onTextChange,
-  onPrefetch,
-  onDownload,
-  isDownloading,
-}: VoiceMessageViewProps) {
-  return (
-    <div className="flex flex-1 gap-4">
-      <Textarea
-        ref={textareaRef}
-        value={text}
-        disabled={message.isPending}
-        onChange={(event) => onTextChange(event.target.value)}
-        placeholder="Enter your message..."
-        className={cn('min-h-[100px] flex-1', {
-          'border-primary': isPlaying,
-        })}
-      />
-      <div
-        className="flex min-w-[100px] flex-col justify-between gap-2"
-        // Start prefetching earlier for good ux
-        onMouseEnter={onPrefetch}
-      >
-        <div className="flex gap-2">
-          <Button
-            size="icon"
-            variant={message.isGenerating ? 'outline' : 'default'}
-            className="size-9"
-            disabled={message.isGenerating || message.isPending || !text}
-            onClick={onGenerate}
-          >
-            {message.isGenerating ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <Wand2 className="size-4" />
-            )}
-          </Button>
-          <Button
-            size="icon"
-            variant="outline"
-            className="size-9"
-            disabled={!message.hasGeneratedAnyAudio}
-            onClick={onPlay}
-            aria-label={`Play ${text}`}
-          >
-            <Play className="size-4" />
-          </Button>
-          <Button
-            size="icon"
-            variant="outline"
-            className="size-9"
-            disabled={!message.hasGeneratedAnyAudio || isDownloading}
-            aria-label="Download"
-            onClick={onDownload}
-          >
-            {isDownloading ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <Download className="size-4" />
-            )}
-          </Button>
-        </div>
-        <Button
-          variant="destructive"
-          size="sm"
-          className="w-full"
-          onClick={onDelete}
-        >
-          <Trash2 className="mr-2 size-4" />
-          Delete
-        </Button>
-      </div>
-    </div>
-  )
-}
+import {
+  messageOperationAtom,
+  useVoiceOperations,
+} from '../hooks/voice-operation'
+import { getAudioUrl } from '../lib/utils'
+import { useVoiceSetContext } from '../set-context/context'
+import { MessageToViewType, VoiceMessageView } from './voice-message-view'
 
 export function VoiceMessage({
   message,
@@ -122,15 +22,54 @@ export function VoiceMessage({
   index: number
   onMessageChange: (messageId: Id<'voiceMessages'>, text: string) => void
   handleDeleteMessage: (messageId: Id<'voiceMessages'>) => void
-  setTextareaRef: (index: number, element: HTMLTextAreaElement | null) => void
+  setTextareaRef: (params: {
+    id: Id<'voiceMessages'>
+    textareaElement: HTMLTextAreaElement | null
+    index: number
+  }) => void
 }) {
   const { state, prefetchUrl } = useAudioContext()
-  const { messageToView, handlePlayMessage, handleGenerate } =
-    useVoiceMessage(message)
+  const { handleGenerate, handleDownload } = useVoiceOperations()
+  const { playMessage } = useAudioContext()
 
+  const messageAtom = useMemo(
+    () => messageOperationAtom(message._id),
+    [message._id]
+  )
+  const [messageOperation] = useAtom(messageAtom)
+
+  const { focusedMessageRef, messagesRefs } = useVoiceSetContext()
   const convex = useConvex()
 
   const [text, setText] = useState(message.currentText)
+
+  const messageToView: MessageToViewType = {
+    isGenerating: messageOperation.generateStatus === 'loading',
+    hasGeneratedAnyAudio: message.lastGenerationMetadata !== undefined,
+    isPending: 'status' in message && message.status === 'pending',
+  }
+
+  const handleGenerateMessageAudio = useCallback(async () => {
+    await handleGenerate({
+      messageId: message._id,
+      text,
+    })
+
+    await handlePlayMessage()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handleGenerate, message._id, text])
+
+  const handlePlayMessage = useCallback(async () => {
+    if (!messageToView.hasGeneratedAnyAudio) return
+
+    await playMessage({
+      messageId: message._id,
+      getUrl: async () => {
+        const url = await getAudioUrl(message._id, convex)
+        return url
+      },
+    })
+  }, [message._id, messageToView.hasGeneratedAnyAudio, playMessage, convex])
 
   const handlePrefetch = useCallback(() => {
     if (messageToView.hasGeneratedAnyAudio) {
@@ -141,47 +80,16 @@ export function VoiceMessage({
     }
   }, [message._id, messageToView.hasGeneratedAnyAudio, prefetchUrl, convex])
 
-  const [downloadStatus, setDownloadStatus] = useState<Status>('idle')
+  const handleFocus = useCallback(() => {
+    const messageRef = messagesRefs.current?.[index]
+    if (!messageRef) return
 
-  const handleDownload = useCallback(async () => {
-    if (!messageToView.hasGeneratedAnyAudio) return
-
-    setDownloadStatus('loading')
-
-    const [url, getUrlError] = await handlePromise(
-      getAudioUrl(message._id, convex)
-    )
-
-    if (getUrlError || !url) {
-      toast.error('Failed to get audio URL')
-      setDownloadStatus('error')
-      return
+    focusedMessageRef.current = {
+      id: message._id,
+      textareaElement: messageRef.textareaElement,
+      index,
     }
-
-    const [blob, downloadError] = await handlePromise(
-      fetch(url).then((res) => res.blob())
-    )
-
-    if (downloadError || !blob) {
-      toast.error('Failed to download audio')
-      setDownloadStatus('error')
-      return
-    }
-
-    // Use the message position for order in filename
-    downloadBlob(
-      blob,
-      `${slugify(message.currentText)}-${message.position}.mp3`
-    )
-
-    setDownloadStatus('success')
-  }, [
-    message._id,
-    message.currentText,
-    message.position,
-    messageToView.hasGeneratedAnyAudio,
-    convex,
-  ])
+  }, [focusedMessageRef, index, message._id, messagesRefs])
 
   return (
     <div key={message._id} className="flex items-start gap-4">
@@ -191,20 +99,25 @@ export function VoiceMessage({
       <VoiceMessageView
         message={messageToView}
         text={text}
-        isDownloading={downloadStatus === 'loading'}
-        onDownload={() => void handleDownload()}
+        isDownloading={messageOperation.downloadStatus === 'loading'}
+        onDownload={() => handleDownload(message._id)}
         isPlaying={state.currentMessageId === message._id}
+        onGenerate={() => handleGenerateMessageAudio()}
+        onPlay={() => handlePlayMessage()}
+        onDelete={() => handleDeleteMessage(message._id)}
+        onPrefetch={handlePrefetch}
+        onFocus={handleFocus}
         onTextChange={(text) => {
           setText(text)
           void onMessageChange(message._id, text)
         }}
-        onGenerate={() => void handleGenerate({ currentText: text })}
-        onPlay={() => void handlePlayMessage()}
-        onDelete={() => void handleDeleteMessage(message._id)}
         textareaRef={(element) => {
-          setTextareaRef(index, element)
+          setTextareaRef({
+            id: message._id,
+            textareaElement: element,
+            index,
+          })
         }}
-        onPrefetch={handlePrefetch}
       />
     </div>
   )

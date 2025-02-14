@@ -10,10 +10,10 @@ export type AudioState = {
 
 export const AudioContext = createContext<{
   state: AudioState
-  playMessage: (
-    messageId: Id<'voiceMessages'>,
+  playMessage: (params: {
+    messageId: Id<'voiceMessages'>
     getUrl: () => Promise<string | undefined>
-  ) => Promise<void>
+  }) => Promise<void>
   pause: () => void
   seek: (time: number) => void
   prefetchUrl: (

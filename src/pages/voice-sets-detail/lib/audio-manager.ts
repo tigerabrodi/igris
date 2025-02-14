@@ -38,10 +38,12 @@ export class AudioManager {
   public onPlay?: () => void
   public onPause?: () => void
 
-  async playMessage(
-    messageId: string,
+  async playMessage(params: {
+    messageId: string
     getUrl: () => Promise<string | undefined>
-  ) {
+  }) {
+    const { messageId, getUrl } = params
+
     // If it's the same message and ended, restart it
     if (messageId === this.currentMessageId && this.audioElement.ended) {
       this.audioElement.currentTime = 0

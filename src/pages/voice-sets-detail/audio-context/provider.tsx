@@ -46,14 +46,14 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const playMessage = useCallback(
-    async (
-      messageId: Id<'voiceMessages'>,
+    async (params: {
+      messageId: Id<'voiceMessages'>
       getUrl: () => Promise<string | undefined>
-    ) => {
-      await audioManager.current?.playMessage(messageId, getUrl)
+    }) => {
+      await audioManager.current?.playMessage(params)
       setState((prev) => ({
         ...prev,
-        currentMessageId: messageId,
+        currentMessageId: params.messageId,
       }))
     },
     []

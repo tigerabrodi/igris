@@ -23,7 +23,10 @@ export function Header({
         <Input
           defaultValue={initialName}
           onChange={(event) => onNameChange(event.target.value)}
-          className="w-[500px] text-4xl font-medium"
+          className="w-[500px] px-4 py-5 font-medium"
+          style={{
+            fontSize: '1.5rem',
+          }}
         />
         <div className="flex items-center gap-2">
           <Button size="icon" variant="outline" onClick={onAddMessage}>
