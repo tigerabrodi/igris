@@ -175,12 +175,15 @@ export const getSetAudioFiles = query({
   async handler(ctx, args) {
     const messages = await ctx.db
       .query('voiceMessages')
-      .filter((q) => q.eq(q.field('setId'), args.setId))
-      .filter((q) => q.neq(q.field('lastGenerationMetadata'), null))
+      .withIndex('by_setId', (q) => q.eq('setId', args.setId))
       .collect()
 
+    const messagesWithAudioFiles = messages.filter(
+      (msg) => msg.lastGenerationMetadata !== undefined
+    )
+
     return Promise.all(
-      messages.map(async (msg) => ({
+      messagesWithAudioFiles.map(async (msg) => ({
         position: msg.position,
         audioUrl: await ctx.storage.getUrl(
           msg.lastGenerationMetadata!.audioFileId
