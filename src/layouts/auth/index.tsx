@@ -86,6 +86,7 @@ export function AuthLayout() {
         <ApiKeyDialog
           open={isApiKeyDialogOpen}
           onOpenChange={setIsApiKeyDialogOpen}
+          hasUserApiKey={hasUserApiKey}
         />
       )}
 

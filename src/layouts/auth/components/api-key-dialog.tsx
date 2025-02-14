@@ -21,6 +21,7 @@ const API_KEY_FORM_NAME = 'apiKey'
 
 type ApiKeyDialogProps = {
   open: boolean
+  hasUserApiKey: boolean
   onOpenChange: (open: boolean) => void
 }
 
@@ -36,7 +37,11 @@ type FormState =
       status: 'idle'
     }
 
-export function ApiKeyDialog({ open, onOpenChange }: ApiKeyDialogProps) {
+export function ApiKeyDialog({
+  open,
+  hasUserApiKey,
+  onOpenChange,
+}: ApiKeyDialogProps) {
   const getApiKey = useAction(api.key.getApiKey)
   const storeApiKey = useAction(api.key.storeApiKey)
 
@@ -71,8 +76,8 @@ export function ApiKeyDialog({ open, onOpenChange }: ApiKeyDialogProps) {
   )
 
   useEffect(() => {
-    if (open) {
-      // Fetch API key when dialog opens
+    if (open && hasUserApiKey) {
+      // Fetch API key when dialog opens and user has api key
       setFetchExistingKeyStatus('loading')
       getApiKey()
         .then((key) => {
@@ -86,7 +91,7 @@ export function ApiKeyDialog({ open, onOpenChange }: ApiKeyDialogProps) {
           setFetchExistingKeyStatus('error')
         })
     }
-  }, [open, getApiKey])
+  }, [open, getApiKey, hasUserApiKey])
 
   const isError = fetchExistingKeyStatus === 'error' || state.status === 'error'
   const errorMessage =
