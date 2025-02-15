@@ -6,14 +6,18 @@ import { ELEVEN_LABS_MODEL } from './elevenlabs.lib'
 export async function generateAudioFromElevenLabs({
   text,
   voiceId,
-  elevenlabsClient,
+  apiKey,
 }: {
   text: string
   voiceId: string
-  elevenlabsClient: ElevenLabsClient
+  apiKey: string
 }): Promise<Blob> {
+  const elevenLabsClient = new ElevenLabsClient({
+    apiKey,
+  })
+
   // Try getting the audio directly without streaming
-  const response = await elevenlabsClient.textToSpeech.convert(voiceId, {
+  const response = await elevenLabsClient.textToSpeech.convert(voiceId, {
     text,
     model_id: ELEVEN_LABS_MODEL,
   })
