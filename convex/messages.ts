@@ -13,9 +13,17 @@ export const getAllMessagesBySetId = query({
     setId: v.id('voiceSets'),
   },
   handler: async (ctx, args) => {
+    const user = await requireCurrentUser(ctx)
+
+    if (!user) {
+      throw new ConvexError('User not found')
+    }
+
     const messages = await ctx.db
       .query('voiceMessages')
-      .withIndex('by_setId', (q) => q.eq('setId', args.setId))
+      .withIndex('by_setId_userId', (q) =>
+        q.eq('setId', args.setId).eq('userId', user._id)
+      )
       .collect()
 
     return messages
