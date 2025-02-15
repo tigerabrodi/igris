@@ -12,8 +12,6 @@ export async function generateAudioFromElevenLabs({
   voiceId: string
   elevenlabsClient: ElevenLabsClient
 }): Promise<Blob> {
-  console.log('Testing with direct conversion, voiceId:', voiceId)
-
   // Try getting the audio directly without streaming
   const response = await elevenlabsClient.textToSpeech.convert(voiceId, {
     text,

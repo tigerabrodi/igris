@@ -25,18 +25,10 @@ export const generateAndStoreAudio = action({
       throw new ConvexError('API key not found')
     }
 
-    console.log('Before query - timestamp:', Date.now())
-
     const [voiceSet, voiceSetError] = await handlePromise(
       ctx.runQuery(internal.sets.getSetByMessageId, {
         id: args.messageId,
       })
-    )
-
-    console.log('After query - set:', voiceSet, 'timestamp:', Date.now())
-    console.log(
-      'About to generate audio with voiceId:',
-      voiceSet?.selectedVoiceId
     )
 
     if (voiceSetError || !voiceSet) {
@@ -50,8 +42,6 @@ export const generateAndStoreAudio = action({
         elevenlabsClient: new ElevenLabsClient({ apiKey }),
       })
     )
-
-    console.log('After generation - used voiceId:', voiceSet.selectedVoiceId)
 
     if (generateAudioError) {
       throw generateAudioError
