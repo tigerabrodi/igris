@@ -1,58 +1,35 @@
 'use node'
 
-import { ConvexError } from 'convex/values'
-import { ElevenLabsClient } from 'elevenlabs'
-import { PassThrough } from 'stream'
+import { ElevenLabsClient } from 'elevenlabs/Client'
 import { ELEVEN_LABS_MODEL } from './elevenlabs.lib'
-import { handlePromise } from './lib'
 
 export async function generateAudioFromElevenLabs({
   text,
   voiceId,
-  apiKey,
+  elevenlabsClient,
 }: {
   text: string
   voiceId: string
-  apiKey: string
+  elevenlabsClient: ElevenLabsClient
 }): Promise<Blob> {
-  const elevenlabsClient = new ElevenLabsClient({ apiKey })
+  console.log('Testing with direct conversion, voiceId:', voiceId)
 
-  const [stream, convertError] = await handlePromise(
-    elevenlabsClient.textToSpeech.convert(voiceId, {
-      text,
-      model_id: ELEVEN_LABS_MODEL,
-    })
-  )
+  // Try getting the audio directly without streaming
+  const response = await elevenlabsClient.textToSpeech.convert(voiceId, {
+    text,
+    model_id: ELEVEN_LABS_MODEL,
+  })
 
-  if (convertError || !stream) {
-    throw new ConvexError(
-      `Failed to convert text to speech: ${convertError?.message}`
-    )
+  // If response is already a Blob, return it
+  if (response instanceof Blob) {
+    return response
   }
 
-  // Create a PassThrough stream to collect chunks
-  const passThrough = new PassThrough()
-  const chunks: Array<Buffer> = []
+  // If it's a stream, convert to Blob directly
+  const chunks = []
+  for await (const chunk of response) {
+    chunks.push(chunk)
+  }
 
-  passThrough.on('data', (chunk: Buffer) => {
-    chunks.push(Buffer.from(chunk))
-  })
-
-  // Return a promise that resolves when streaming is complete
-  return new Promise<Blob>((resolve, reject) => {
-    // Type the Promise
-    passThrough.on('end', () => {
-      const combinedBuffer = Buffer.concat(chunks)
-      resolve(new Blob([combinedBuffer], { type: 'audio/mpeg' }))
-    })
-
-    passThrough.on('error', (error: Error) => {
-      // Type the error
-      reject(
-        new ConvexError(`Failed to process audio stream: ${error.message}`)
-      )
-    })
-
-    stream.pipe(passThrough)
-  })
+  return new Blob(chunks, { type: 'audio/mpeg' })
 }

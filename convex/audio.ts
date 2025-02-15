@@ -1,6 +1,7 @@
 'use node'
 
 import { ConvexError, v } from 'convex/values'
+import { ElevenLabsClient } from 'elevenlabs/Client'
 import { api, internal } from './_generated/api'
 import { action } from './_generated/server'
 import { handlePromise } from './lib'
@@ -24,21 +25,33 @@ export const generateAndStoreAudio = action({
       throw new ConvexError('API key not found')
     }
 
-    const set = await ctx.runQuery(internal.sets.getSetByMessageId, {
-      id: args.messageId,
-    })
+    console.log('Before query - timestamp:', Date.now())
 
-    if (!set) {
-      throw new ConvexError('Set not found')
+    const [voiceSet, voiceSetError] = await handlePromise(
+      ctx.runQuery(internal.sets.getSetByMessageId, {
+        id: args.messageId,
+      })
+    )
+
+    console.log('After query - set:', voiceSet, 'timestamp:', Date.now())
+    console.log(
+      'About to generate audio with voiceId:',
+      voiceSet?.selectedVoiceId
+    )
+
+    if (voiceSetError || !voiceSet) {
+      throw new ConvexError('Voice set not found')
     }
 
     const [audioBlob, generateAudioError] = await handlePromise(
       generateAudioFromElevenLabs({
         text: args.text,
-        voiceId: set.selectedVoiceId,
-        apiKey,
+        voiceId: voiceSet.selectedVoiceId,
+        elevenlabsClient: new ElevenLabsClient({ apiKey }),
       })
     )
+
+    console.log('After generation - used voiceId:', voiceSet.selectedVoiceId)
 
     if (generateAudioError) {
       throw generateAudioError
@@ -57,7 +70,7 @@ export const generateAndStoreAudio = action({
         messageId: args.messageId,
         storageId,
         lastGeneratedText: args.text,
-        lastUsedVoice: set.selectedVoiceId,
+        lastUsedVoice: voiceSet.selectedVoiceId,
       })
     )
 
