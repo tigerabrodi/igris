@@ -77,7 +77,17 @@ export const getSetById = query({
     id: v.id('voiceSets'),
   },
   handler: async (ctx, args) => {
-    const set = await ctx.db.get(args.id)
+    const user = await requireCurrentUser(ctx)
+
+    if (!user) {
+      throw new ConvexError('User not found')
+    }
+
+    const set = await ctx.db
+      .query('voiceSets')
+      .withIndex('by_userId', (q) => q.eq('userId', user._id))
+      .filter((q) => q.eq(q.field('_id'), args.id))
+      .first()
 
     return set
   },
@@ -134,9 +144,17 @@ export const deleteSet = mutation({
       throw new ConvexError('Set not found')
     }
 
+    const user = await requireCurrentUser(ctx)
+
+    if (!user) {
+      throw new ConvexError('User not found')
+    }
+
     const messages = await ctx.db
       .query('voiceMessages')
-      .withIndex('by_setId', (q) => q.eq('setId', set._id))
+      .withIndex('by_setId_userId', (q) =>
+        q.eq('setId', set._id).eq('userId', user._id)
+      )
       .collect()
 
     const messageFileDeletionPromises = []
@@ -169,9 +187,17 @@ export const deleteSet = mutation({
 export const getSetAudioFiles = query({
   args: { setId: v.id('voiceSets') },
   async handler(ctx, args) {
+    const user = await requireCurrentUser(ctx)
+
+    if (!user) {
+      return []
+    }
+
     const messages = await ctx.db
       .query('voiceMessages')
-      .withIndex('by_setId', (q) => q.eq('setId', args.setId))
+      .withIndex('by_setId_userId', (q) =>
+        q.eq('setId', args.setId).eq('userId', user._id)
+      )
       .collect()
 
     const messagesWithAudioFiles = messages.filter(

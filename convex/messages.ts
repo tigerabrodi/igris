@@ -13,9 +13,17 @@ export const getAllMessagesBySetId = query({
     setId: v.id('voiceSets'),
   },
   handler: async (ctx, args) => {
+    const user = await requireCurrentUser(ctx)
+
+    if (!user) {
+      return []
+    }
+
     const messages = await ctx.db
       .query('voiceMessages')
-      .withIndex('by_setId', (q) => q.eq('setId', args.setId))
+      .withIndex('by_setId_userId', (q) =>
+        q.eq('setId', args.setId).eq('userId', user._id)
+      )
       .collect()
 
     return messages
@@ -216,9 +224,6 @@ export const getMessageForAudio = internalQuery({
   args: { messageId: v.id('voiceMessages') },
   handler: async (ctx, args) => {
     const message = await ctx.db.get(args.messageId)
-    if (!message) {
-      throw new ConvexError('Message not found')
-    }
     return message
   },
 })

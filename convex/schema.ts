@@ -36,7 +36,7 @@ const schema = defineSchema({
     updatedAt: v.number(),
     setId: v.id('voiceSets'),
     userId: v.id('users'),
-  }).index('by_setId', ['setId']),
+  }).index('by_setId_userId', ['setId', 'userId']),
 })
 
 export default schema
