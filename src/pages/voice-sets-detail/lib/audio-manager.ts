@@ -41,35 +41,42 @@ export class AudioManager {
   async playMessage(params: {
     messageId: string
     getUrl: () => Promise<string | undefined>
+    shouldForceRefresh: boolean
   }) {
-    const { messageId, getUrl } = params
+    const { messageId, getUrl, shouldForceRefresh = false } = params
 
-    // If it's the same message and ended, restart it
-    if (messageId === this.currentMessageId && this.audioElement.ended) {
-      this.audioElement.currentTime = 0
-      await this.audioElement.play()
-      return
-    }
+    // All these conditions should be skipped if forceRefresh is true
+    // because we definitely want to play the new audio
+    if (!shouldForceRefresh) {
+      // If it's the same message and ended, restart it
+      if (messageId === this.currentMessageId && this.audioElement.ended) {
+        this.audioElement.currentTime = 0
+        await this.audioElement.play()
+        return
+      }
 
-    // If it's the same message and paused, resume it
-    if (messageId === this.currentMessageId && this.audioElement.paused) {
-      await this.audioElement.play()
-      return
-    }
+      // If it's the same message and paused, resume it
+      if (messageId === this.currentMessageId && this.audioElement.paused) {
+        await this.audioElement.play()
+        return
+      }
 
-    // If it's the same message and playing, pause it
-    if (messageId === this.currentMessageId && !this.audioElement.paused) {
-      this.audioElement.pause()
-      return
+      // If it's the same message and playing, pause it
+      if (messageId === this.currentMessageId && !this.audioElement.paused) {
+        this.audioElement.pause()
+        return
+      }
     }
 
     // Get URL (from cache or fetch new)
     let url = this.messageUrlCache.get(messageId)
-    if (!url) {
+    if (!url || shouldForceRefresh) {
       url = await getUrl()
+
       if (!url) {
         return
       }
+
       this.messageUrlCache.set(messageId, url)
     }
 

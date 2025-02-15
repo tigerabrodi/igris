@@ -222,3 +222,15 @@ export const getMessageForAudio = internalQuery({
     return message
   },
 })
+
+export const getMessageStorageId = internalQuery({
+  args: { messageId: v.id('voiceMessages') },
+  handler: async (ctx, args) => {
+    const message = await ctx.db.get(args.messageId)
+    if (!message?.lastGenerationMetadata?.audioFileId) {
+      return null
+    }
+
+    return message.lastGenerationMetadata.audioFileId
+  },
+})

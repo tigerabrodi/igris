@@ -26,14 +26,15 @@ export const messageOperationsAtom = atom<
  * @param messageId - The ID of the message to get the state for
  * @returns An atom with the message state
  */
-export const messageOperationAtom = (messageId: Id<'voiceMessages'>) =>
-  atom(
+export const messageOperationAtom = (messageId: Id<'voiceMessages'>) => {
+  return atom(
     (get) =>
       get(messageOperationsAtom)[messageId] ?? {
         generateStatus: 'idle',
         downloadStatus: 'idle',
       }
   )
+}
 
 export function useVoiceOperations() {
   const { voiceSetId } = useParams<{ voiceSetId: Id<'voiceSets'> }>()
@@ -79,8 +80,8 @@ export function useVoiceOperations() {
 
       const [, error] = await handlePromise(
         convex.action(api.audio.generateAndStoreAudio, {
-          messageId,
           text,
+          messageId,
         })
       )
 
@@ -102,6 +103,7 @@ export function useVoiceOperations() {
 
       await playMessage({
         messageId,
+        shouldForceRefresh: true,
         getUrl: async () => {
           const url = await getAudioUrl(messageId, convex)
           return url

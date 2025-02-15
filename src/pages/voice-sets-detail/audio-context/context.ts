@@ -13,6 +13,7 @@ export const AudioContext = createContext<{
   playMessage: (params: {
     messageId: Id<'voiceMessages'>
     getUrl: () => Promise<string | undefined>
+    shouldForceRefresh?: boolean
   }) => Promise<void>
   pause: () => void
   seek: (time: number) => void

@@ -1,7 +1,6 @@
 'use node'
 
 import { ConvexError, v } from 'convex/values'
-import { ElevenLabsClient } from 'elevenlabs/Client'
 import { api, internal } from './_generated/api'
 import { action } from './_generated/server'
 import { handlePromise } from './lib'
@@ -25,26 +24,44 @@ export const generateAndStoreAudio = action({
       throw new ConvexError('API key not found')
     }
 
-    const [voiceSet, voiceSetError] = await handlePromise(
-      ctx.runQuery(internal.sets.getSetByMessageId, {
-        id: args.messageId,
-      })
-    )
+    const message = await ctx.runQuery(internal.messages.getMessageForAudio, {
+      messageId: args.messageId,
+    })
 
-    if (voiceSetError || !voiceSet) {
-      throw new ConvexError('Voice set not found')
+    if (!message) {
+      throw new ConvexError('Message not found')
+    }
+
+    const set = await ctx.runQuery(internal.sets.getSetByMessageId, {
+      id: message._id,
+    })
+
+    if (!set) {
+      throw new ConvexError('Set not found')
     }
 
     const [audioBlob, generateAudioError] = await handlePromise(
       generateAudioFromElevenLabs({
         text: args.text,
-        voiceId: voiceSet.selectedVoiceId,
-        elevenlabsClient: new ElevenLabsClient({ apiKey }),
+        voiceId: set.selectedVoiceId,
+        apiKey,
       })
     )
 
     if (generateAudioError) {
       throw generateAudioError
+    }
+
+    const existingStorageId = await ctx.runQuery(
+      internal.messages.getMessageStorageId,
+      {
+        messageId: args.messageId,
+      }
+    )
+
+    // Let's properly delete first
+    if (existingStorageId) {
+      await ctx.storage.delete(existingStorageId)
     }
 
     const [storageId, storeError] = await handlePromise(
@@ -60,7 +77,7 @@ export const generateAndStoreAudio = action({
         messageId: args.messageId,
         storageId,
         lastGeneratedText: args.text,
-        lastUsedVoice: voiceSet.selectedVoiceId,
+        lastUsedVoice: set.selectedVoiceId,
       })
     )
 

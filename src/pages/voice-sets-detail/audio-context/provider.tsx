@@ -49,8 +49,12 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     async (params: {
       messageId: Id<'voiceMessages'>
       getUrl: () => Promise<string | undefined>
+      shouldForceRefresh?: boolean
     }) => {
-      await audioManager.current?.playMessage(params)
+      await audioManager.current?.playMessage({
+        ...params,
+        shouldForceRefresh: params.shouldForceRefresh ?? false,
+      })
       setState((prev) => ({
         ...prev,
         currentMessageId: params.messageId,
